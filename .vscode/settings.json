@@ -1,0 +1,10 @@
+{
+  // 保存時の文字コードを UTF-8 に固定
+  "files.encoding": "utf8",
+
+  // 改行コードを LF に固定
+  "files.eol": "\n",
+
+  // ファイル末尾に改行を必ず入れる（Git 的に◎）
+  "files.insertFinalNewline": true
+}
