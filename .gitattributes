@@ -1,0 +1,10 @@
+# すべてのテキストファイルを LF に統一
+* text=auto eol=lf
+
+# 明示的にテキストとして扱う拡張子
+*.txt   text
+*.md    text
+*.sh    text
+*.yml   text
+*.yaml  text
+*.json  text
