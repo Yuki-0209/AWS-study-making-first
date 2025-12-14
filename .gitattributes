@@ -1,0 +1,10 @@
+# Normalize all text files to LF
+* text=auto eol=lf
+
+# Explicit text file types
+*.txt   text
+*.md    text
+*.sh    text
+*.yml   text
+*.yaml  text
+*.json  text
