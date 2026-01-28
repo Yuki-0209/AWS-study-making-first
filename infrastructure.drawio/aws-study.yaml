@@ -1,8 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Simple VPC with Public and Private Subnets, EC2 Instances, and Security 
+Description: Simple VPC with Public  EC2 Instances, and Security 
 # VPCとサブネット、EC2インスタンス、セキュリティグループを作成するCloudFormationテンプレート
 # PublicSubnetにはインターネットゲートウェイを介してインターネットアクセスが可能なEC2インスタンスを配置
-# PrivateSubnetにはNATゲートウェイを介してインターネットアクセスが可能なEC2インスタンスを配置
 
 Resources:
 # VPCの作成
@@ -16,14 +15,8 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref MyVPC
-      CidrBlock: 10.0.1.0/24
-
-# Privateサブネットの作成
-  PrivateSubnet:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref MyVPC
-      CidrBlock: 10.0.2.0/24     
+      CidrBlock: 10.0.1.0/24 
+      MapPublicIpOnLaunch: true  
 
 # インターネットゲートウェイの作成
   InternetGateway:
@@ -58,41 +51,6 @@ Resources:
       SubnetId: !Ref PublicSubnet
       RouteTableId: !Ref PublicRouteTable
 
-# NATゲートウェイ用のEIPの作成
-  NatEIP:
-    Type: AWS::EC2::EIP
-    Properties:
-      Domain: vpc
-
-# NATゲートウェイの作成
-  NatGateway:
-   Type: AWS::EC2::NatGateway 
-   DependsOn: AttachGateway
-   Properties: 
-    AllocationId: !GetAtt NatEIP.AllocationId
-    SubnetId: !Ref PublicSubnet
-
-# Privateルートテーブルの作成
-  PrivateRouteTable:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref MyVPC
-
-# Privateルートの作成
-  PrivateRoute:
-    Type: AWS::EC2::Route
-    Properties:
-      RouteTableId: !Ref PrivateRouteTable
-      DestinationCidrBlock: 0.0.0.0/0 
-      NatGatewayId: !Ref NatGateway 
-
-# PrivateサブネットとPrivateルートテーブルの関連付け
-  PrivateSubnetRouteTableAssociation: 
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties: 
-      SubnetId: !Ref PrivateSubnet
-      RouteTableId: !Ref PrivateRouteTable
-
 # Webサーバー用セキュリティグループの作成
   WebSecurityGroup: 
     Type: AWS::EC2::SecurityGroup
@@ -120,38 +78,5 @@ Resources:
         - !Ref WebSecurityGroup
       KeyName: aws-study
 
-# PrivateサブネットのEC2インスタンス作成
-  PrivateEC2: 
-    Type: AWS::EC2::Instance
-    Properties:
-      ImageId: ami-03d1820163e6b9f5d
-      InstanceType: t2.micro
-      SubnetId: !Ref PrivateSubnet
-      SecurityGroupIds:
-       - !Ref WebSecurityGroup
-      KeyName: aws-study
 
-# Public EC2用セキュリティグループの作成
-  PublicSG: 
-    Type: AWS::EC2::SecurityGroup
-    Properties: 
-      GroupDescription: Public EC2 SG 
-      VpcId: !Ref MyVPC 
-      SecurityGroupIngress: 
-        - IpProtocol: tcp 
-          FromPort: 80
-          ToPort: 80
-          CidrIp: 0.0.0.0/0
-
-# Private EC2用セキュリティグループの作成
-  PrivateSG: 
-    Type: AWS::EC2::SecurityGroup 
-    Properties: 
-      GroupDescription: Private EC2 SG 
-      VpcId: !Ref MyVPC 
-      SecurityGroupIngress: 
-        - IpProtocol: tcp 
-          FromPort: 3306
-          ToPort: 3306
-          SourceSecurityGroupId: !Ref PublicSG 
 
