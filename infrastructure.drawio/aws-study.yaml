@@ -1,38 +1,48 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Simple VPC with Public and Private Subnets, EC2 Instances, and Security Groups
+Description: Simple VPC with Public and Private Subnets, EC2 Instances, and Security 
+# VPCとサブネット、EC2インスタンス、セキュリティグループを作成するCloudFormationテンプレート
+# PublicSubnetにはインターネットゲートウェイを介してインターネットアクセスが可能なEC2インスタンスを配置
+# PrivateSubnetにはNATゲートウェイを介してインターネットアクセスが可能なEC2インスタンスを配置
 
 Resources:
+# VPCの作成
   MyVPC:
     Type: AWS::EC2::VPC
     Properties:
       CidrBlock: 10.0.0.0/16
 
+# Publicサブネットの作成
   PublicSubnet:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref MyVPC
       CidrBlock: 10.0.1.0/24
 
+# Privateサブネットの作成
   PrivateSubnet:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref MyVPC
       CidrBlock: 10.0.2.0/24     
 
+# インターネットゲートウェイの作成
   InternetGateway:
     Type: AWS::EC2::InternetGateway
 
+# VPCへのインターネットゲートウェイアタッチ
   AttachGateway: 
     Type: AWS::EC2::VPCGatewayAttachment
     Properties: 
       VpcId: !Ref MyVPC
       InternetGatewayId: !Ref InternetGateway
 
+# Publicルートテーブルの作成
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref MyVPC
-    
+
+# Publicルートの作成    
   PublicRoute:
     Type: AWS::EC2::Route
     DependsOn: AttachGateway
@@ -41,17 +51,20 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
  
+ # PublicサブネットとPublicルートテーブルの関連付け
   PublicSubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref PublicSubnet
       RouteTableId: !Ref PublicRouteTable
 
+# NATゲートウェイ用のEIPの作成
   NatEIP:
     Type: AWS::EC2::EIP
     Properties:
       Domain: vpc
 
+# NATゲートウェイの作成
   NatGateway:
    Type: AWS::EC2::NatGateway 
    DependsOn: AttachGateway
@@ -59,11 +72,13 @@ Resources:
     AllocationId: !GetAtt NatEIP.AllocationId
     SubnetId: !Ref PublicSubnet
 
+# Privateルートテーブルの作成
   PrivateRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref MyVPC
 
+# Privateルートの作成
   PrivateRoute:
     Type: AWS::EC2::Route
     Properties:
@@ -71,12 +86,14 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0 
       NatGatewayId: !Ref NatGateway 
 
+# PrivateサブネットとPrivateルートテーブルの関連付け
   PrivateSubnetRouteTableAssociation: 
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties: 
       SubnetId: !Ref PrivateSubnet
       RouteTableId: !Ref PrivateRouteTable
 
+# Webサーバー用セキュリティグループの作成
   WebSecurityGroup: 
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -92,6 +109,7 @@ Resources:
           ToPort: 80
           CidrIp: 0.0.0.0/0
 
+# PublicサブネットのEC2インスタンス作成
   WebEC2:
     Type: AWS::EC2::Instance
     Properties: 
@@ -102,6 +120,7 @@ Resources:
         - !Ref WebSecurityGroup
       KeyName: aws-study
 
+# PrivateサブネットのEC2インスタンス作成
   PrivateEC2: 
     Type: AWS::EC2::Instance
     Properties:
@@ -112,6 +131,7 @@ Resources:
        - !Ref WebSecurityGroup
       KeyName: aws-study
 
+# Public EC2用セキュリティグループの作成
   PublicSG: 
     Type: AWS::EC2::SecurityGroup
     Properties: 
@@ -123,6 +143,7 @@ Resources:
           ToPort: 80
           CidrIp: 0.0.0.0/0
 
+# Private EC2用セキュリティグループの作成
   PrivateSG: 
     Type: AWS::EC2::SecurityGroup 
     Properties: 
