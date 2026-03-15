@@ -40,16 +40,28 @@ Resources:
         - Key: Name
           Value: PublicSubnetC
 
-  PrivateSubnetA: 
+  PrivateSubnetA:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: 10.0.2.0/24 
+      CidrBlock: 10.0.2.0/24
       AvailabilityZone: ap-northeast-1a
-      Tags: 
+      MapPublicIpOnLaunch: false # パブリックIPを自動付与しない
+      Tags:
         - Key: Name
           Value: PrivateSubnetA
-      
+
+  PrivateSubnetC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.4.0/24
+      AvailabilityZone: ap-northeast-1c
+      MapPublicIpOnLaunch: false # パブリックIPを自動付与しない
+      Tags:
+        - Key: Name
+          Value: PrivateSubnetC
+
 # -----------------------
 # Internet Gateway
 # -----------------------
@@ -251,6 +263,10 @@ Resources:
       DBSubnetGroupDescription: DB Subnet Group 
       SubnetIds: 
         - !Ref PrivateSubnetA
+        - !Ref PrivateSubnetC
+      Tags:
+        - Key: Name
+          Value: aws-study-db-subnet-group
         
 
          
