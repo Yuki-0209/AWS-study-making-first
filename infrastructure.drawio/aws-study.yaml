@@ -202,6 +202,8 @@ Resources:
   ELBTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
+      Protocol: HTTP
+      Port: 80
       VpcId: !Ref VPC
       HealthyThresholdCount: 2
       UnhealthyThresholdCount: 2
@@ -217,7 +219,7 @@ Resources:
           Value: aws-study-elb-target-group
       Targets: 
         - Id: !Ref WebEC2
-          Port: 8080
+          Port: 80
 
   ELBListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
@@ -242,20 +244,17 @@ Resources:
       Port: 3306
       StorageType: gp2
       BackupRetentionPeriod: 1
-      PreferredBackupWindow: 17:00-18:00
-      PreferredMaintenanceWindow: sun:17:00-sun:18:00
       MasterUsername: root
       MasterUserPassword: rootroot
-      DBName: aws-study-rds
+      DBName: mydb
       Engine: mysql 
-      EngineVersion: 8.0.39
       LicenseModel: general-public-license
       DBSubnetGroupName: !Ref DBSubnetGroup
       VPCSecurityGroups: 
         - !Ref RDSSecurityGroup
       Tags:
         - Key: Name
-          Value: aws-study-rds  
+          Value: mydb 
 
   DBSubnetGroup:  
     Type: AWS::RDS::DBSubnetGroup 
