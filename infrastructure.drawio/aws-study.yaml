@@ -203,7 +203,7 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       Protocol: HTTP
-      Port: 80
+      Port: 8080
       VpcId: !Ref VPC
       HealthyThresholdCount: 2
       UnhealthyThresholdCount: 2
@@ -219,14 +219,14 @@ Resources:
           Value: aws-study-elb-target-group
       Targets: 
         - Id: !Ref WebEC2
-          Port: 80
+          Port: 8080
 
   ELBListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       LoadBalancerArn: !Ref ELB # ELBにリスナーを作成する
       DefaultActions:
-        - Type: forward # HTTP80で来たリクエストをTargetGroupに転送する
+        - Type: forward # HTTP8080で来たリクエストをTargetGroupに転送する
           TargetGroupArn: !Ref ELBTargetGroup 
       Port: 80
       Protocol: HTTP 
@@ -248,6 +248,7 @@ Resources:
       MasterUserPassword: rootroot
       DBName: mydb
       Engine: mysql 
+      EngineVersion: "8.0.41"
       LicenseModel: general-public-license
       DBSubnetGroupName: !Ref DBSubnetGroup
       VPCSecurityGroups: 
