@@ -1,136 +1,275 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Simple VPC with Public and Private Subnets, EC2 Instances, and Security Groups
+Description: AWS Template
 
 Resources:
-  MyVPC:
+# -----------------------
+# VPC
+# -----------------------
+  VPC:
     Type: AWS::EC2::VPC
     Properties:
       CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: aws-study-vpc
 
-  PublicSubnet:
+# -----------------------
+# Subnets
+# -----------------------
+  PublicSubnetA:
     Type: AWS::EC2::Subnet
     Properties:
-      VpcId: !Ref MyVPC
-      CidrBlock: 10.0.1.0/24
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24 
+      AvailabilityZone: ap-northeast-1a
+      MapPublicIpOnLaunch: true # パブリックIPを自動付与可能にする
+      Tags:
+        - Key: Name
+          Value: PublicSubnetA
 
-  PrivateSubnet:
+  PublicSubnetC: 
+    Type: AWS::EC2::Subnet
+    Properties: 
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.3.0/24
+      AvailabilityZone: ap-northeast-1c
+      MapPublicIpOnLaunch: true # パブリックIPを自動付与可能にする
+      Tags:
+        - Key: Name
+          Value: PublicSubnetC
+
+  PrivateSubnetA:
     Type: AWS::EC2::Subnet
     Properties:
-      VpcId: !Ref MyVPC
-      CidrBlock: 10.0.2.0/24     
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: ap-northeast-1a
+      MapPublicIpOnLaunch: false # パブリックIPを自動付与しない
+      Tags:
+        - Key: Name
+          Value: PrivateSubnetA
 
+  PrivateSubnetC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.4.0/24
+      AvailabilityZone: ap-northeast-1c
+      MapPublicIpOnLaunch: false # パブリックIPを自動付与しない
+      Tags:
+        - Key: Name
+          Value: PrivateSubnetC
+
+# -----------------------
+# Internet Gateway
+# -----------------------
   InternetGateway:
     Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: aws-study-igw
 
+# -----------------------
+# VPC Gateway Attachment
+# -----------------------
   AttachGateway: 
     Type: AWS::EC2::VPCGatewayAttachment
     Properties: 
-      VpcId: !Ref MyVPC
+      VpcId: !Ref VPC
       InternetGatewayId: !Ref InternetGateway
+      
 
+# -----------------------
+# Route Table (Public)
+# -----------------------
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
-      VpcId: !Ref MyVPC
-    
+      VpcId: !Ref VPC
+      Tags: 
+        - Key: Name
+          Value: aws-study-route
+
+# -----------------------
+# Route (Public)
+# -----------------------
   PublicRoute:
+
     Type: AWS::EC2::Route
-    DependsOn: AttachGateway
+    DependsOn: AttachGateway # AttachGatewayの作成後に実行
     Properties:
       RouteTableId: !Ref PublicRouteTable
-      DestinationCidrBlock: 0.0.0.0/0
+      DestinationCidrBlock: 0.0.0.0/0 # Internetへのルート
       GatewayId: !Ref InternetGateway
  
-  PublicSubnetRouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
+  PublicSubnetARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation # PublicサブネットAにルートテーブルの通信ルールの関連付け
     Properties:
-      SubnetId: !Ref PublicSubnet
+      SubnetId: !Ref PublicSubnetA
       RouteTableId: !Ref PublicRouteTable
 
-  NatEIP:
-    Type: AWS::EC2::EIP
+  PublicSubnetCRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation # PublicサブネットCにルートテーブルの通信ルールの関連付け
     Properties:
-      Domain: vpc
+      SubnetId: !Ref PublicSubnetC
+      RouteTableId: !Ref PublicRouteTable
 
-  NatGateway:
-   Type: AWS::EC2::NatGateway 
-   DependsOn: AttachGateway
-   Properties: 
-    AllocationId: !GetAtt NatEIP.AllocationId
-    SubnetId: !Ref PublicSubnet
-
-  PrivateRouteTable:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref MyVPC
-
-  PrivateRoute:
-    Type: AWS::EC2::Route
-    Properties:
-      RouteTableId: !Ref PrivateRouteTable
-      DestinationCidrBlock: 0.0.0.0/0 
-      NatGatewayId: !Ref NatGateway 
-
-  PrivateSubnetRouteTableAssociation: 
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties: 
-      SubnetId: !Ref PrivateSubnet
-      RouteTableId: !Ref PrivateRouteTable
-
-  WebSecurityGroup: 
+# -----------------------
+# Security Group 
+# -----------------------
+  EC2SecurityGroup: 
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Web SG 
-      VpcId: !Ref MyVPC
+      GroupDescription: AWS Study EC2 
+      VpcId: !Ref VPC
       SecurityGroupIngress: 
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
+          FromPort: 8080
+          ToPort: 8080
           CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: aws-study-ec2-sg     
 
+  RDSSecurityGroup: 
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: AWS Study RDS
+      VpcId: !Ref VPC
+      SecurityGroupIngress: 
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId: !Ref EC2SecurityGroup
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: aws-study-rds-sg
+
+# -----------------------
+# EC2 
+# -----------------------
   WebEC2:
     Type: AWS::EC2::Instance
     Properties: 
-      ImageId: ami-03d1820163e6b9f5d
+      # Amazon Linux 2023の最新AMIをSSMパラメータストアから取得
+      ImageId: !Sub "resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64" 
       InstanceType: t2.micro
-      SubnetId: !Ref PublicSubnet
+      SubnetId: !Ref PublicSubnetA
+      DisableApiTermination: false
+      InstanceInitiatedShutdownBehavior: stop
+      KeyName: aws-study
+      Monitoring: false
       SecurityGroupIds: 
-        - !Ref WebSecurityGroup
-      KeyName: aws-study
-
-  PrivateEC2: 
-    Type: AWS::EC2::Instance
+        - !Ref EC2SecurityGroup
+      Tags:
+        - Key: Name
+          Value: aws-study-ec2  
+      
+# -----------------------
+# ELB
+# -----------------------
+  ELB: 
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
-      ImageId: ami-03d1820163e6b9f5d
-      InstanceType: t2.micro
-      SubnetId: !Ref PrivateSubnet
-      SecurityGroupIds:
-       - !Ref WebSecurityGroup
-      KeyName: aws-study
+      Name: aws-study-elb
+      Scheme: internet-facing # インターネット向け
+      Subnets:
+        - !Ref PublicSubnetA
+        - !Ref PublicSubnetC
+      SecurityGroups:
+        - !Ref EC2SecurityGroup
+      Tags:
+        - Key: Name
+          Value: aws-study-elb
 
-  PublicSG: 
-    Type: AWS::EC2::SecurityGroup
-    Properties: 
-      GroupDescription: Public EC2 SG 
-      VpcId: !Ref MyVPC 
-      SecurityGroupIngress: 
-        - IpProtocol: tcp 
-          FromPort: 80
-          ToPort: 80
-          CidrIp: 0.0.0.0/0
+  ELBTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Protocol: HTTP
+      Port: 8080
+      VpcId: !Ref VPC
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 2
+      HealthCheckTimeoutSeconds: 5
+      HealthCheckProtocol: HTTP
+      HealthCheckPath: "/"
+      HealthCheckPort: "traffic-port"
+      HealthCheckIntervalSeconds: 10
+      Matcher: 
+        HttpCode: 200
+      Tags: 
+        - Key: Name
+          Value: aws-study-elb-target-group
+      Targets: 
+        - Id: !Ref WebEC2
+          Port: 8080
 
-  PrivateSG: 
-    Type: AWS::EC2::SecurityGroup 
+  ELBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ELB # ELBにリスナーを作成する
+      DefaultActions:
+        - Type: forward # HTTP8080で来たリクエストをTargetGroupに転送する
+          TargetGroupArn: !Ref ELBTargetGroup 
+      Port: 80
+      Protocol: HTTP 
+      
+# -----------------------
+# RDS
+# ----------------------- 
+  RDS:
+    Type: AWS::RDS::DBInstance 
     Properties: 
-      GroupDescription: Private EC2 SG 
-      VpcId: !Ref MyVPC 
-      SecurityGroupIngress: 
-        - IpProtocol: tcp 
-          FromPort: 3306
-          ToPort: 3306
-          SourceSecurityGroupId: !Ref PublicSG 
+      AllocatedStorage: 20
+      AllowMajorVersionUpgrade: false
+      AutoMinorVersionUpgrade: true
+      DBInstanceClass: db.t4g.micro 
+      Port: 3306
+      StorageType: gp2
+      BackupRetentionPeriod: 1
+      MasterUsername: root
+      MasterUserPassword: rootroot
+      DBName: mydb
+      Engine: mysql 
+      EngineVersion: "8.0.41"
+      LicenseModel: general-public-license
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      VPCSecurityGroups: 
+        - !Ref RDSSecurityGroup
+      Tags:
+        - Key: Name
+          Value: mydb 
+
+  DBSubnetGroup:  
+    Type: AWS::RDS::DBSubnetGroup 
+    Properties: 
+      DBSubnetGroupDescription: DB Subnet Group 
+      SubnetIds: 
+        - !Ref PrivateSubnetA
+        - !Ref PrivateSubnetC
+      Tags:
+        - Key: Name
+          Value: aws-study-db-subnet-group
+        
+
+         
+
+    
 
