@@ -80,18 +80,13 @@ Resources:
     Properties: 
       VpcId: !Ref VPC
       InternetGatewayId: !Ref InternetGateway
-      
 
 # -----------------------
 # Route Table (Public)
 # -----------------------
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
-<<<<<<< Updated upstream
-    Properties:
-=======
     Properties:   
->>>>>>> Stashed changes
       VpcId: !Ref VPC
       Tags: 
         - Key: Name
@@ -99,24 +94,15 @@ Resources:
 
 # -----------------------
 # Route (Public)
-<<<<<<< Updated upstream
 # -----------------------
-=======
-# -----------------------  
->>>>>>> Stashed changes
   PublicRoute:
-
     Type: AWS::EC2::Route
     DependsOn: AttachGateway # AttachGatewayの作成後に実行
     Properties:
       RouteTableId: !Ref PublicRouteTable
       DestinationCidrBlock: 0.0.0.0/0 # Internetへのルート
       GatewayId: !Ref InternetGateway
-<<<<<<< Updated upstream
- 
-=======
-
->>>>>>> Stashed changes
+      
   PublicSubnetARouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation # PublicサブネットAにルートテーブルの通信ルールの関連付け
     Properties:
@@ -135,26 +121,6 @@ Resources:
   EC2SecurityGroup: 
     Type: AWS::EC2::SecurityGroup
     Properties:
-<<<<<<< Updated upstream
-      GroupDescription: AWS Study EC2 
-      VpcId: !Ref VPC
-      SecurityGroupIngress: 
-        - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: 8080
-          ToPort: 8080
-          CidrIp: 0.0.0.0/0
-      SecurityGroupEgress:
-        - IpProtocol: -1
-          CidrIp: 0.0.0.0/0
-=======
       VpcId: !Ref VPC
       GroupDescription: AWS Study EC2
       SecurityGroupIngress: 
@@ -165,7 +131,6 @@ Resources:
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
->>>>>>> Stashed changes
       Tags:
         - Key: Name
           Value: aws-study-ec2-sg     
@@ -186,120 +151,6 @@ Resources:
       Tags:
         - Key: Name
           Value: aws-study-rds-sg
-<<<<<<< Updated upstream
-
-# -----------------------
-# EC2 
-# -----------------------
-  WebEC2:
-    Type: AWS::EC2::Instance
-    Properties: 
-      # Amazon Linux 2023の最新AMIをSSMパラメータストアから取得
-      ImageId: !Sub "resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64" 
-      InstanceType: t2.micro
-      SubnetId: !Ref PublicSubnetA
-      DisableApiTermination: false
-      InstanceInitiatedShutdownBehavior: stop
-      KeyName: aws-study
-      Monitoring: false
-      SecurityGroupIds: 
-        - !Ref EC2SecurityGroup
-      Tags:
-        - Key: Name
-          Value: aws-study-ec2  
-      
-# -----------------------
-# ELB
-# -----------------------
-  ELB: 
-    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
-    Properties:
-      Name: aws-study-elb
-      Scheme: internet-facing # インターネット向け
-      Subnets:
-        - !Ref PublicSubnetA
-        - !Ref PublicSubnetC
-      SecurityGroups:
-        - !Ref EC2SecurityGroup
-      Tags:
-        - Key: Name
-          Value: aws-study-elb
-
-  ELBTargetGroup:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    Properties:
-      Protocol: HTTP
-      Port: 8080
-      VpcId: !Ref VPC
-      HealthyThresholdCount: 2
-      UnhealthyThresholdCount: 2
-      HealthCheckTimeoutSeconds: 5
-      HealthCheckProtocol: HTTP
-      HealthCheckPath: "/"
-      HealthCheckPort: "traffic-port"
-      HealthCheckIntervalSeconds: 10
-      Matcher: 
-        HttpCode: 200
-      Tags: 
-        - Key: Name
-          Value: aws-study-elb-target-group
-      Targets: 
-        - Id: !Ref WebEC2
-          Port: 8080
-
-  ELBListener:
-    Type: AWS::ElasticLoadBalancingV2::Listener
-    Properties:
-      LoadBalancerArn: !Ref ELB # ELBにリスナーを作成する
-      DefaultActions:
-        - Type: forward # HTTP8080で来たリクエストをTargetGroupに転送する
-          TargetGroupArn: !Ref ELBTargetGroup 
-      Port: 80
-      Protocol: HTTP 
-      
-# -----------------------
-# RDS
-# ----------------------- 
-  RDS:
-    Type: AWS::RDS::DBInstance 
-    Properties: 
-      AllocatedStorage: 20
-      AllowMajorVersionUpgrade: false
-      AutoMinorVersionUpgrade: true
-      DBInstanceClass: db.t4g.micro 
-      Port: 3306
-      StorageType: gp2
-      BackupRetentionPeriod: 1
-      MasterUsername: root
-      MasterUserPassword: rootroot
-      DBName: mydb
-      Engine: mysql 
-      EngineVersion: "8.0.41"
-      LicenseModel: general-public-license
-      DBSubnetGroupName: !Ref DBSubnetGroup
-      VPCSecurityGroups: 
-        - !Ref RDSSecurityGroup
-      Tags:
-        - Key: Name
-          Value: mydb 
-
-  DBSubnetGroup:  
-    Type: AWS::RDS::DBSubnetGroup 
-    Properties: 
-      DBSubnetGroupDescription: DB Subnet Group 
-      SubnetIds: 
-        - !Ref PrivateSubnetA
-        - !Ref PrivateSubnetC
-      Tags:
-        - Key: Name
-          Value: aws-study-db-subnet-group
-        
-
-         
-
-    
-=======
->>>>>>> Stashed changes
 
 # -----------------------
 # EC2 
