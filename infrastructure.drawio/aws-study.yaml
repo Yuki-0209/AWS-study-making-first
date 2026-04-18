@@ -80,13 +80,14 @@ Resources:
     Properties: 
       VpcId: !Ref VPC
       InternetGatewayId: !Ref InternetGateway
+      
 
 # -----------------------
 # Route Table (Public)
 # -----------------------
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
-    Properties:   
+    Properties:
       VpcId: !Ref VPC
       Tags: 
         - Key: Name
@@ -96,6 +97,7 @@ Resources:
 # Route (Public)
 # -----------------------
   PublicRoute:
+
     Type: AWS::EC2::Route
     DependsOn: AttachGateway 
     Properties:
