@@ -24,7 +24,7 @@ Resources:
       VpcId: !Ref VPC
       CidrBlock: 10.0.1.0/24 
       AvailabilityZone: ap-northeast-1a
-      MapPublicIpOnLaunch: true # パブリックIPを自動付与可能にする
+      MapPublicIpOnLaunch: true 
       Tags:
         - Key: Name
           Value: PublicSubnetA
@@ -35,7 +35,7 @@ Resources:
       VpcId: !Ref VPC
       CidrBlock: 10.0.3.0/24
       AvailabilityZone: ap-northeast-1c
-      MapPublicIpOnLaunch: true # パブリックIPを自動付与可能にする
+      MapPublicIpOnLaunch: true 
       Tags:
         - Key: Name
           Value: PublicSubnetC
@@ -46,7 +46,7 @@ Resources:
       VpcId: !Ref VPC
       CidrBlock: 10.0.2.0/24
       AvailabilityZone: ap-northeast-1a
-      MapPublicIpOnLaunch: false # パブリックIPを自動付与しない
+      MapPublicIpOnLaunch: false 
       Tags:
         - Key: Name
           Value: PrivateSubnetA
@@ -57,14 +57,14 @@ Resources:
       VpcId: !Ref VPC
       CidrBlock: 10.0.4.0/24
       AvailabilityZone: ap-northeast-1c
-      MapPublicIpOnLaunch: false # パブリックIPを自動付与しない
+      MapPublicIpOnLaunch: false 
       Tags:
         - Key: Name
           Value: PrivateSubnetC
 
 # -----------------------
 # Internet Gateway
-# -----------------------
+# ------------------------
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
@@ -99,20 +99,20 @@ Resources:
   PublicRoute:
 
     Type: AWS::EC2::Route
-    DependsOn: AttachGateway # AttachGatewayの作成後に実行
+    DependsOn: AttachGateway 
     Properties:
       RouteTableId: !Ref PublicRouteTable
-      DestinationCidrBlock: 0.0.0.0/0 # Internetへのルート
+      DestinationCidrBlock: 0.0.0.0/0 
       GatewayId: !Ref InternetGateway
- 
+      
   PublicSubnetARouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation # PublicサブネットAにルートテーブルの通信ルールの関連付け
+    Type: AWS::EC2::SubnetRouteTableAssociation 
     Properties:
       SubnetId: !Ref PublicSubnetA
       RouteTableId: !Ref PublicRouteTable
 
   PublicSubnetCRouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation # PublicサブネットCにルートテーブルの通信ルールの関連付け
+    Type: AWS::EC2::SubnetRouteTableAssociation 
     Properties:
       SubnetId: !Ref PublicSubnetC
       RouteTableId: !Ref PublicRouteTable
@@ -123,21 +123,13 @@ Resources:
   EC2SecurityGroup: 
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: AWS Study EC2 
       VpcId: !Ref VPC
+      GroupDescription: AWS Study EC2
       SecurityGroupIngress: 
-        - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 8080
           ToPort: 8080
-          CidrIp: 0.0.0.0/0
+          SourceSecurityGroupId: !Ref ELBSecurityGroup 
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
@@ -165,22 +157,52 @@ Resources:
 # -----------------------
 # EC2 
 # -----------------------
-  WebEC2:
+
+  EC2:
     Type: AWS::EC2::Instance
     Properties: 
-      # Amazon Linux 2023の最新AMIをSSMパラメータストアから取得
       ImageId: !Sub "resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64" 
       InstanceType: t2.micro
       SubnetId: !Ref PublicSubnetA
       DisableApiTermination: false
       InstanceInitiatedShutdownBehavior: stop
-      KeyName: aws-study
       Monitoring: false
       SecurityGroupIds: 
         - !Ref EC2SecurityGroup
       Tags:
         - Key: Name
           Value: aws-study-ec2  
+      IamInstanceProfile: !Ref EC2InstanceProfile
+
+  EC2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+      Policies:
+        - PolicyName: SecretsAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: !Ref DBSecret
+      
+  EC2InstanceProfile: 
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles: 
+        - !Ref EC2Role
       
 # -----------------------
 # ELB
@@ -189,12 +211,12 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Name: aws-study-elb
-      Scheme: internet-facing # インターネット向け
+      Scheme: internet-facing 
       Subnets:
         - !Ref PublicSubnetA
         - !Ref PublicSubnetC
       SecurityGroups:
-        - !Ref EC2SecurityGroup
+        - !Ref ELBSecurityGroup
       Tags:
         - Key: Name
           Value: aws-study-elb
@@ -218,18 +240,32 @@ Resources:
         - Key: Name
           Value: aws-study-elb-target-group
       Targets: 
-        - Id: !Ref WebEC2
+        - Id: !Ref EC2
           Port: 8080
 
   ELBListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
-      LoadBalancerArn: !Ref ELB # ELBにリスナーを作成する
+      LoadBalancerArn: !Ref ELB 
       DefaultActions:
-        - Type: forward # HTTP8080で来たリクエストをTargetGroupに転送する
+        - Type: forward 
           TargetGroupArn: !Ref ELBTargetGroup 
       Port: 80
       Protocol: HTTP 
+  
+  ELBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      VpcId: !Ref VPC 
+      GroupDescription: ELB SG 
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
       
 # -----------------------
 # RDS
@@ -244,8 +280,8 @@ Resources:
       Port: 3306
       StorageType: gp2
       BackupRetentionPeriod: 1
-      MasterUsername: root
-      MasterUserPassword: rootroot
+      MasterUsername: !Sub '{{resolve:secretsmanager:${DBSecret}::username}}'
+      MasterUserPassword: !Sub '{{resolve:secretsmanager:${DBSecret}::password}}'
       DBName: mydb
       Engine: mysql 
       EngineVersion: "8.0.41"
@@ -257,6 +293,16 @@ Resources:
         - Key: Name
           Value: mydb 
 
+  DBSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties: 
+      Name: mydb-secret
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "admin"}' 
+        GenerateStringKey: "password" 
+        PasswordLength: 16 
+        ExcludeCharacters: '"@/\ ' 
+
   DBSubnetGroup:  
     Type: AWS::RDS::DBSubnetGroup 
     Properties: 
@@ -267,9 +313,3 @@ Resources:
       Tags:
         - Key: Name
           Value: aws-study-db-subnet-group
-        
-
-         
-
-    
-
