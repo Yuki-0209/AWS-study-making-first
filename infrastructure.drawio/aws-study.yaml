@@ -313,3 +313,71 @@ Resources:
       Tags:
         - Key: Name
           Value: aws-study-db-subnet-group
+
+# -----------------------
+# SNSTopic
+# -----------------------
+  SNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub "${AWS::StackName}-alarm-topic"
+
+  SNSSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref SNSTopic
+      Protocol: email
+      Endpoint: fantasyyuki01@gmail.com
+    
+# -----------------------
+# CloudWatch Alarm
+# -----------------------
+  EC2CPUUtilizationAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties: 
+      AlarmName: !Sub "${AWS::StackName}-ec2-cpu-alarm"
+      AlarmDescription: "Aws-study EC2のCPU使用率が 70%以上になりました。"
+
+      Namespace: "AWS/EC2"
+      Dimensions: 
+        - Name: "InstanceId"
+          Value: !Ref EC2 
+      MetricName: "CPUUtilization"
+      Unit: "Percent"
+
+      Period: 300 
+      Statistic: "Average" 
+      
+      Threshold: 70
+      ComparisonOperator: "GreaterThanOrEqualToThreshold" 
+      EvaluationPeriods: 3 
+      DatapointsToAlarm: 2 
+      TreatMissingData: "notBreaching"
+
+      ActionsEnabled: True 
+      AlarmActions: 
+        - !Ref SNSTopic
+
+  ELB5XXAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-elb-5xx-alarm"
+
+      Namespace: AWS/ApplicationELB
+      MetricName: HTTPCode_ELB_5XX_Count
+
+      Dimensions:
+        - Name: LoadBalancer
+          Value: !GetAtt ELB.LoadBalancerFullName
+
+      Statistic: Sum
+      Period: 300
+
+      Threshold: 5
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+
+      EvaluationPeriods: 1
+      TreatMissingData: "notBreaching"
+
+      AlarmActions:
+        - !Ref SNSTopic      
