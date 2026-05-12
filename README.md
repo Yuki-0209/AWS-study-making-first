@@ -6,6 +6,18 @@ README
 - Formatting is enforced by `.editorconfig` and `.gitattributes`
 
   ---
+## aws-study.yaml　SNS Email Notificationについて
+
+CloudWatch Alarm の通知先として SNS Email 通知を利用する場合、通知先メールアドレス宛に AWS から確認メールが送信されます。
+
+* 差出人例: [no-reply@sns.amazonaws.com](mailto:no-reply@sns.amazonaws.com)
+* 件名例: AWS Notification - Subscription Confirmation
+
+メール本文内の「Confirm subscription」リンクをクリックし、サブスクリプション承認を完了してください。
+
+承認を実施しない場合、CloudWatch Alarm の通知メールは送信されません。
+
+メールが届かない場合は、迷惑メールフォルダも確認してください。
 
 ## infrastructure.drawio.png
 

@@ -1,6 +1,10 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: AWS Template
 
+Parameters:
+  NotificationEmail:
+    Type: String
+    
 Resources:
 # -----------------------
 # VPC
@@ -313,3 +317,172 @@ Resources:
       Tags:
         - Key: Name
           Value: aws-study-db-subnet-group
+
+# -----------------------
+# AWS WAF 
+# -----------------------
+  WebACL: 
+    Type: AWS::WAFv2::WebACL 
+    Properties: 
+      Name: !Sub "${AWS::StackName}-web-acl" 
+      Scope: REGIONAL 
+       
+      DefaultAction: 
+        Allow: {}
+      
+      VisibilityConfig: 
+        SampledRequestsEnabled: true 
+        CloudWatchMetricsEnabled: true
+        MetricName: WebACLMetric 
+
+      Rules: 
+        - Name: BlockTestURI
+          Priority: 0 
+
+          Action: 
+            Block: {}
+          
+          Statement: 
+            ByteMatchStatement: 
+              SearchString: "/block-test" 
+
+              FieldToMatch: 
+                UriPath: {} 
+
+              TextTransformations: 
+                - Priority: 0
+                  Type: NONE   
+              
+              PositionalConstraint: CONTAINS 
+
+          VisibilityConfig: 
+            SampledRequestsEnabled: true 
+            CloudWatchMetricsEnabled: true
+            MetricName: BlockTestURIMetric
+
+        - Name: AWS-AWSManagedRulesCommonRuleSet
+          Priority: 1 
+
+          OverrideAction: 
+            None: {} 
+
+          Statement: 
+            ManagedRuleGroupStatement: 
+              VendorName: AWS 
+              Name: AWSManagedRulesCommonRuleSet
+
+          VisibilityConfig: 
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: CommonRuleSetMetric 
+
+# -----------------------
+# WAF WebACL Association
+# -----------------------         
+  WebACLAssociation: 
+    Type: AWS::WAFv2::WebACLAssociation
+    Properties: 
+      ResourceArn: !GetAtt ELB.LoadBalancerArn
+      WebACLArn: !GetAtt WebACL.Arn 
+
+# -----------------------
+# CloudWatch Logs
+# -----------------------
+  WAFLogGroup: 
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub "aws-waf-logs-${AWS::StackName}" 
+      RetentionInDays: 14 
+       
+# -----------------------
+# SNSTopic
+# -----------------------
+  SNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Protocol: email
+          Endpoint: !Ref NotificationEmail
+
+# -----------------------
+# CloudWatch Alarm
+# -----------------------
+  EC2CPUUtilizationAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties: 
+      AlarmName: !Sub "${AWS::StackName}-ec2-cpu-alarm"
+      AlarmDescription: "Aws-study EC2のCPU使用率が 70%以上になりました。"
+
+      Namespace: "AWS/EC2"
+      Dimensions: 
+        - Name: "InstanceId"
+          Value: !Ref EC2 
+      MetricName: "CPUUtilization"
+      Unit: "Percent"
+
+      Period: 300 
+      Statistic: "Average" 
+      
+      Threshold: 70
+      ComparisonOperator: "GreaterThanOrEqualToThreshold" 
+      EvaluationPeriods: 3 
+      DatapointsToAlarm: 2 
+      TreatMissingData: "notBreaching"
+
+      ActionsEnabled: True 
+      AlarmActions: 
+        - !Ref SNSTopic
+
+  ELB5XXAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-elb-5xx-alarm"
+
+      Namespace: AWS/ApplicationELB
+      MetricName: HTTPCode_ELB_5XX_Count
+
+      Dimensions:
+        - Name: LoadBalancer
+          Value: !GetAtt ELB.LoadBalancerFullName
+
+      Statistic: Sum
+      Period: 300
+
+      Threshold: 5
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+
+      EvaluationPeriods: 1
+      TreatMissingData: "notBreaching"
+      AlarmActions:
+        - !Ref SNSTopic   
+
+  WAFBlockedRequestsAlarm: 
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-waf-blocked-requests" 
+
+      AlarmDescription: "WAF Blocked requests detected" 
+
+      Namespace: AWS/WAFV2
+      MetricName: BlockedRequests
+      
+      Dimensions: 
+        - Name: WebACL 
+          Value: !Sub "${AWS::StackName}-web-acl" 
+          
+        - Name: Rule
+          Value: ALL
+
+        - Name: Region
+          Value: !Ref 'AWS::Region'
+
+      Statistic: Sum 
+      Period: 300 
+       
+      EvaluationPeriods: 1 
+      Threshold: 1 
+      ComparisonOperator: GreaterThanOrEqualToThreshold 
+       
+      TreatMissingData: "notBreaching" 
+      AlarmActions: 
+        - !Ref SNSTopic 
