@@ -383,11 +383,7 @@ Resources:
   WebACLAssociation: 
     Type: AWS::WAFv2::WebACLAssociation
     Properties: 
-<<<<<<< HEAD
-      ResourceArn: !Ref ELB 
-=======
       ResourceArn: !GetAtt ELB.LoadBalancerArn
->>>>>>> main
       WebACLArn: !GetAtt WebACL.Arn 
 
 # -----------------------
@@ -400,20 +396,6 @@ Resources:
       RetentionInDays: 14 
        
 # -----------------------
-<<<<<<< HEAD
-# WAF LoggingConfiguration
-# -----------------------
-  WAFLoggingConfiguration: 
-    Type: AWS::WAFv2::LoggingConfiguration 
-    Properties: 
-      ResourceArn: !GetAtt WebACL.Arn 
-       
-      LogDestinationConfigs: 
-        - !GetAtt WAFLogGroup.Arn
-         
-# -----------------------
-=======
->>>>>>> main
 # SNSTopic
 # -----------------------
   SNSTopic:
@@ -493,11 +475,7 @@ Resources:
           Value: ALL
 
         - Name: Region
-<<<<<<< HEAD
-          Value: ap-northeast-1
-=======
           Value: !Ref AWS::Region
->>>>>>> main
 
       Statistic: Sum 
       Period: 300 
@@ -508,16 +486,4 @@ Resources:
        
       TreatMissingData: "notBreaching" 
       AlarmActions: 
-<<<<<<< HEAD
         - !Ref SNSTopic 
-
-
-
-          
-
-
-
-            
-=======
-        - !Ref SNSTopic 
->>>>>>> main
