@@ -4,7 +4,6 @@ Description: AWS Template
 Parameters:
   NotificationEmail:
     Type: String
-    Default: fantasyyuki01@gmail.com
     
 Resources:
 # -----------------------
@@ -475,7 +474,7 @@ Resources:
           Value: ALL
 
         - Name: Region
-          Value: !Ref AWS::Region
+          Value: !Ref 'AWS::Region'
 
       Statistic: Sum 
       Period: 300 
