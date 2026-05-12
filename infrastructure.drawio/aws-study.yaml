@@ -1,6 +1,11 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: AWS Template
 
+Parameters:
+  NotificationEmail:
+    Type: String
+    Default: fantasyyuki01@gmail.com
+    
 Resources:
 # -----------------------
 # VPC
@@ -378,7 +383,11 @@ Resources:
   WebACLAssociation: 
     Type: AWS::WAFv2::WebACLAssociation
     Properties: 
+<<<<<<< HEAD
       ResourceArn: !Ref ELB 
+=======
+      ResourceArn: !GetAtt ELB.LoadBalancerArn
+>>>>>>> main
       WebACLArn: !GetAtt WebACL.Arn 
 
 # -----------------------
@@ -391,6 +400,7 @@ Resources:
       RetentionInDays: 14 
        
 # -----------------------
+<<<<<<< HEAD
 # WAF LoggingConfiguration
 # -----------------------
   WAFLoggingConfiguration: 
@@ -402,20 +412,17 @@ Resources:
         - !GetAtt WAFLogGroup.Arn
          
 # -----------------------
+=======
+>>>>>>> main
 # SNSTopic
 # -----------------------
   SNSTopic:
     Type: AWS::SNS::Topic
     Properties:
-      TopicName: !Sub "${AWS::StackName}-alarm-topic"
+      Subscription:
+        - Protocol: email
+          Endpoint: !Ref NotificationEmail
 
-  SNSSubscription:
-    Type: AWS::SNS::Subscription
-    Properties:
-      TopicArn: !Ref SNSTopic
-      Protocol: email
-      Endpoint: fantasyyuki01@gmail.com
-    
 # -----------------------
 # CloudWatch Alarm
 # -----------------------
@@ -486,7 +493,11 @@ Resources:
           Value: ALL
 
         - Name: Region
+<<<<<<< HEAD
           Value: ap-northeast-1
+=======
+          Value: !Ref AWS::Region
+>>>>>>> main
 
       Statistic: Sum 
       Period: 300 
@@ -497,6 +508,7 @@ Resources:
        
       TreatMissingData: "notBreaching" 
       AlarmActions: 
+<<<<<<< HEAD
         - !Ref SNSTopic 
 
 
@@ -506,3 +518,6 @@ Resources:
 
 
             
+=======
+        - !Ref SNSTopic 
+>>>>>>> main
