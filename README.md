@@ -6,6 +6,11 @@ README
 - Formatting is enforced by `.editorconfig` and `.gitattributes`
 
   ---
+## aws-study.yaml　SNS Email Notificationについて
+
+SNS Email通知を利用する場合、通知先メールアドレス宛に送信される確認メールからサブスクリプション承認を実施する必要があります。
+
+承認を完了しない場合、CloudWatch Alarm通知メールは送信されません。
 
 ## infrastructure.drawio.png
 
