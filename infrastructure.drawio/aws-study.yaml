@@ -386,6 +386,19 @@ Resources:
       WebACLArn: !GetAtt WebACL.Arn 
 
 # -----------------------
+# WAF Logging Configuration
+# -----------------------
+  WAFLoggingConfiguration:
+    Type: AWS::WAFv2::LoggingConfiguration
+    Properties:
+      ResourceArn: !GetAtt WebACL.Arn
+      LogDestinationConfigs:
+        - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:aws-waf-logs-${AWS::StackName}"
+    DependsOn:
+      - WAFLogGroup
+      - WebACL
+      
+# -----------------------
 # CloudWatch Logs
 # -----------------------
   WAFLogGroup: 
