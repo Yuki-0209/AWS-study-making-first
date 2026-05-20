@@ -1,0 +1,9 @@
+# ------------------------------
+# Terraformファイル　見られたくないもの
+# ------------------------------
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.exe
+terraform/tfplan
+terraform/*.tfplan
+terraform/terraform.tfvars
