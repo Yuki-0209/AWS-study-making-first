@@ -39,7 +39,7 @@ resource "aws_iam_role_policy" "secrets_access" {
         Action = [
           "secretsmanager:GetSecretValue"
         ]
-        Resource = "*"
+        Resource = aws_secretsmanager_secret.db.arn
       }
     ]
   })
