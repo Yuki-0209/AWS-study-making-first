@@ -2,7 +2,7 @@
 # CloudWatch Log Group
 # ---------------------
 resource "aws_cloudwatch_log_group" "waf" {
-  name              = "aws-waf-logs-aws-study" 
+  name              = "aws-waf-logs-aws-study"
   retention_in_days = 14
 }
 
@@ -22,7 +22,7 @@ resource "aws_wafv2_web_acl" "main" {
     priority = 0
 
     action {
-      block{}
+      block {}
     }
 
     statement {
@@ -30,21 +30,21 @@ resource "aws_wafv2_web_acl" "main" {
         search_string = "/block-test"
 
         field_to_match {
-          uri_path {}   
+          uri_path {}
         }
 
         text_transformation {
-          priority = 0 
-          type = "NONE"
+          priority = 0
+          type     = "NONE"
         }
         positional_constraint = "CONTAINS"
       }
     }
-    
+
     visibility_config {
       sampled_requests_enabled   = true
       cloudwatch_metrics_enabled = true
-      metric_name                = "BlockTestMetric" 
+      metric_name                = "BlockTestMetric"
     }
   }
 
@@ -53,7 +53,7 @@ resource "aws_wafv2_web_acl" "main" {
     priority = 1
 
     override_action {
-      none{}
+      none {}
     }
 
     statement {
@@ -62,22 +62,22 @@ resource "aws_wafv2_web_acl" "main" {
         name        = "AWSManagedRulesCommonRuleSet"
       }
     }
-    
+
     visibility_config {
       sampled_requests_enabled   = true
       cloudwatch_metrics_enabled = true
-      metric_name                = "CommonRuleSetMetric" 
+      metric_name                = "CommonRuleSetMetric"
     }
   }
-  
+
   visibility_config {
     sampled_requests_enabled   = true
     cloudwatch_metrics_enabled = true
     metric_name                = "WebACLMetric"
   }
-  
+
   tags = {
-    Name = "aws-study-web-acl" 
+    Name = "aws-study-web-acl"
   }
 }
 
@@ -93,6 +93,6 @@ resource "aws_wafv2_web_acl_association" "alb" {
 # WAF Logging Configuration
 # ---------------------
 resource "aws_wafv2_web_acl_logging_configuration" "main" {
-  resource_arn = aws_wafv2_web_acl.main.arn
+  resource_arn            = aws_wafv2_web_acl.main.arn
   log_destination_configs = [aws_cloudwatch_log_group.waf.arn]
 }

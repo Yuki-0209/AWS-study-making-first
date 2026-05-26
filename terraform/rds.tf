@@ -10,9 +10,9 @@ resource "aws_secretsmanager_secret" "db" {
 # DBSecretの値
 # ------------------
 resource "random_password" "db" {
-  length = 16
-  special = true
-  override_special ="!#$%&*()-_=+[]{}?" 
+  length           = 16
+  special          = true
+  override_special = "!#$%&*()-_=+[]{}?"
 }
 
 # ------------------
@@ -46,24 +46,24 @@ resource "aws_db_subnet_group" "main" {
 # ------------------
 resource "aws_db_instance" "main" {
   allocated_storage = 20
-  storage_type = "gp2"
-  engine = "mysql"
-  engine_version = "8.0.41"
-  instance_class = "db.t4g.micro"
-  db_name = "mydb"
+  storage_type      = "gp2"
+  engine            = "mysql"
+  engine_version    = "8.0.41"
+  instance_class    = "db.t4g.micro"
+  db_name           = "mydb"
 
   username = jsondecode(aws_secretsmanager_secret_version.db.secret_string)["username"]
   password = jsondecode(aws_secretsmanager_secret_version.db.secret_string)["password"]
-  port = 3306
+  port     = 3306
 
-  db_subnet_group_name = aws_db_subnet_group.main.name
-  vpc_security_group_ids = [aws_security_group.rds.id]
-  backup_retention_period = 1
+  db_subnet_group_name        = aws_db_subnet_group.main.name
+  vpc_security_group_ids      = [aws_security_group.rds.id]
+  backup_retention_period     = 1
   allow_major_version_upgrade = false
-  auto_minor_version_upgrade = true
-  license_model = "general-public-license"
-  deletion_protection = false
-  skip_final_snapshot = true
+  auto_minor_version_upgrade  = true
+  license_model               = "general-public-license"
+  deletion_protection         = false
+  skip_final_snapshot         = true
 
   tags = {
     Name = "mydb"

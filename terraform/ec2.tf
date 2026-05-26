@@ -21,7 +21,7 @@ resource "aws_iam_role" "ec2" {
 # IAM Managed Policy Attachment
 # ---------------
 resource "aws_iam_role_policy_attachment" "ssm" {
-  role = aws_iam_role.ec2.name
+  role       = aws_iam_role.ec2.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
@@ -57,14 +57,14 @@ resource "aws_iam_instance_profile" "ec2" {
 # EC2
 # ---------------
 resource "aws_instance" "main" {
-  ami = data.aws_ami.amazon_linux_2023.id
-  instance_type = "t2.micro"
-  subnet_id = aws_subnet.public_a.id
-  vpc_security_group_ids = [aws_security_group.ec2.id]
-  iam_instance_profile = aws_iam_instance_profile.ec2.name
-  disable_api_termination = false
+  ami                                  = data.aws_ami.amazon_linux_2023.id
+  instance_type                        = "t2.micro"
+  subnet_id                            = aws_subnet.public_a.id
+  vpc_security_group_ids               = [aws_security_group.ec2.id]
+  iam_instance_profile                 = aws_iam_instance_profile.ec2.name
+  disable_api_termination              = false
   instance_initiated_shutdown_behavior = "stop"
-  monitoring = false
+  monitoring                           = false
 
   tags = {
     Name = "aws-study-ec2"
@@ -76,10 +76,10 @@ resource "aws_instance" "main" {
 # ---------------
 data "aws_ami" "amazon_linux_2023" {
   most_recent = true
-  owners = ["amazon"]
+  owners      = ["amazon"]
   filter {
     name   = "name"
-    values =["al2023-ami-*-x86_64"]  
+    values = ["al2023-ami-*-x86_64"]
   }
 
   filter {
@@ -90,5 +90,5 @@ data "aws_ami" "amazon_linux_2023" {
   filter {
     name   = "state"
     values = ["available"]
-  } 
+  }
 }

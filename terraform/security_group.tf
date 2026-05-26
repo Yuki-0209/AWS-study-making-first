@@ -3,10 +3,10 @@
 # ---------------
 resource "aws_security_group" "elb" {
   description = "ELB SG"
-  vpc_id = aws_vpc.main.id 
+  vpc_id      = aws_vpc.main.id
 
   ingress {
-    protocol    =  "tcp"
+    protocol    = "tcp"
     from_port   = 80
     to_port     = 80
     cidr_blocks = ["0.0.0.0/0"]
@@ -20,7 +20,7 @@ resource "aws_security_group" "elb" {
   }
 
   tags = {
-    Name = "aws_study_elb_sg" 
+    Name = "aws_study_elb_sg"
   }
 }
 
@@ -34,7 +34,7 @@ resource "aws_security_group" "ec2" {
   ingress {
     protocol        = "tcp"
     from_port       = 8080
-    to_port   = 8080
+    to_port         = 8080
     security_groups = [aws_security_group.elb.id]
   }
 
