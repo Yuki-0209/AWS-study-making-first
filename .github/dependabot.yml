@@ -1,0 +1,20 @@
+version: 2
+
+updates:
+  # Terraform provider のアップデートを監視
+  - package-ecosystem: "terraform"
+    directory: "/terraform"
+    schedule:
+      interval: "weekly"      # 週1回チェック
+    labels:
+      - "terraform"
+      - "dependencies"
+
+  # GitHub Actions のアップデートを監視
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "github-actions"
+      - "dependencies"
