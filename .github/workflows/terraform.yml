@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: リポジトリをチェックアウト
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: AWS 認証情報を設定         # ← 追加
         uses: aws-actions/configure-aws-credentials@v6
