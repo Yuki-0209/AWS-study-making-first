@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]          # 全ブランチのpushで実行
+  pull_request:
+    branches: [main]          # mainへのPRで実行
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]   # 複数バージョンでテスト
+
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Python ${{ matrix.python-version }} をセットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"                     # 依存キャッシュで高速化
+
+      - name: 依存パッケージをインストール
+        run: pip install -r requirements-dev.txt
+
+      - name: Lintチェック (flake8)
+        run: flake8 src/ tests/ --max-line-length=100
+
+      - name: テスト実行 + カバレッジ計測
+        run: pytest --cov=src --cov-report=xml --cov-report=term
+
+      - name: カバレッジをアップロード (Codecov)
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+        continue-on-error: true            # Codecov未設定でも落ちない
