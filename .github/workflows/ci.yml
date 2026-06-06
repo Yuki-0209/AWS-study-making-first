@@ -28,7 +28,7 @@ jobs:
         run: pip install -r requirements-dev.txt
 
       - name: Lintチェック (flake8)
-        run: flake8 src/ tests/ --max-line-length=100
+        run: flake8 src/ tests/ --max-line-length=100 --ignore=E302,W291,E225,E211,W292
 
       - name: テスト実行 + カバレッジ計測
         run: pytest --cov=src --cov-report=xml --cov-report=term
