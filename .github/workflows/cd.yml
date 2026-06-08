@@ -1,0 +1,31 @@
+name: CD
+
+on: 
+  push: 
+    branches: [main]
+
+jobs: 
+  deploy: 
+    runs-on: ubuntu-latest
+    
+    steps: 
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Pythonをセットアップ
+        uses: actions/setup-python@v5
+        with: 
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: ビルドツールをインストール
+        run: pip install build twine 
+
+      - name: パッケージをビルド
+        run: python -m build 
+
+      - name: TestPyPIへ公開
+        env: 
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        run: twine upload --repository testpypi dist/*
