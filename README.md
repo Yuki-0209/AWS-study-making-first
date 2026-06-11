@@ -1,68 +1,113 @@
-README
-## Coding Style
+# AWS Infrastructure — Terraform IaC Project
 
-- Text files are encoded in UTF-8
-- Line endings are LF
-- Formatting is enforced by `.editorconfig` and `.gitattributes`
+## Overview
 
-  ---
-## aws-study.yaml　SNS Email Notificationについて
+個人学習として、**本番環境を想定したAWSインフラをTerraformで構築**したプロジェクトです。
+CloudFormationで設計した構成をTerraformへ移植することで、IaCツールの違いと使い分けを実践的に学習しました。
 
-CloudWatch Alarm の通知先として SNS Email 通知を利用する場合、通知先メールアドレス宛に AWS から確認メールが送信されます。
+> **実際に `terraform apply` でAWSへデプロイ済み**の環境コードです。
 
-* 差出人例: [no-reply@sns.amazonaws.com](mailto:no-reply@sns.amazonaws.com)
-* 件名例: AWS Notification - Subscription Confirmation
+---
 
-メール本文内の「Confirm subscription」リンクをクリックし、サブスクリプション承認を完了してください。
+## Architecture
 
-承認を実施しない場合、CloudWatch Alarm の通知メールは送信されません。
+![Infrastructure Diagram](./infrastructure.png)
 
-メールが届かない場合は、迷惑メールフォルダも確認してください。
+### 構成の概要
 
-## infrastructure.drawio.png
+| レイヤー | サービス | 設計意図 |
+|----------|----------|----------|
+| ネットワーク | VPC / IGW / NAT Gateway | パブリック/プライベートを分離しアクセス制御 |
+| ロードバランサー | ALB | 複数AZへの振り分けで可用性を確保 |
+| コンピュート | EC2 | プライベートサブネットに配置しセキュリティ強化 |
+| データベース | RDS | 機密データを扱うためプライベートサブネットに隔離 |
+| ストレージ | S3 | 静的アセット・ログ保管 |
+| セキュリティ | AWS WAF / ACM / Systems Manager | WAFで不正アクセス遮断、SSMでEC2への安全なアクセス |
+| 監視・通知 | CloudWatch / SNS | アラームと通知を連携し運用監視を自動化 |
+| ガバナンス | CloudTrail / AWS Config | 操作ログ・構成変更を継続的に記録 |
 
-これはinfrastructure.drawioの簡単な説明です
+---
 
-### この構成図の目的
-- 個人学習用のAWS基本構成
+## Subnet Design
 
-### 前提条件
-- 東京リージョン
-- プライベート/パブリックに分離
+```
+VPC (10.0.0.0/16)
+├── Public
+│   ├── raisetech-subnet-public-a   ALB / NAT Gateway
+│   └── raisetech-subnet-public-c   冗長化用
+├── Application (Private)
+│   ├── raisetech-subnet-ap-a       EC2 (アプリケーション)
+│   └── raisetech-subnet-ap-c       冗長化用
+└── Database (Private)
+    ├── raisetech-subnet-db-a       RDS
+    └── raisetech-subnet-db-c       冗長化用
+```
 
-### 利用するAWSサービス一覧
-- Amazon VPC
-- Internet Gateway（IGW）
-- NAT Gateway
-- Elastic Load Balancing（ALB）
-- Amazon EC2
-- Amazon RDS
-- Amazon S3
-- AWS ACM
-- AWS CloudTrail
-- AWS Config
-- AWS Systems Manager
+Private サブネットはIGWへの直接ルートを持たず、NAT Gateway経由でのみ外部通信が可能です。
 
-### 各サブネットの役割
-- サブネット名	: 役割
-- raisetech-subnet-public-a : ALB / NAT Gateway 配置
-- raisetech-subnet-public-c	: 冗長化用 Public サブネット
-- raisetech-subnet-ap-a	: アプリケーション（EC2）
-- raisetech-subnet-ap-c : 冗長化用 AP
-- raisetech-subnet-db-a	: RDS（DB）
-- raisetech-subnet-db-c	: 冗長化用 DB
- ※ Private サブネットは Internet Gateway への直接ルートを持たず、NAT Gateway 経由でのみ外部通信可能。
+---
 
- ### 主な通信フロー
-- from:to:ポート 
-- User→ALB	80 / 443	
-- ALB→EC2 (AP)	80 / 443	
-- EC2 (AP)	→RDS (DB)	3306
-- EC2 (AP)	→Internet	443
+## Why Terraform?
 
-本図で使用しているアイコンは AWS公式アーキテクチャアイコン（AWS Architecture Icons）を使用しています。
+当初はCloudFormationで構成を設計しましたが、以下の理由からTerraformへ移植しました。
 
+- **マルチクラウド対応**: Terraformは将来的にAzure/GCPへも応用可能
+- **state管理**: 構成変更の差分（plan）を事前確認できる安全な運用フロー
+- **コードの可読性**: HCLはYAMLより直感的でモジュール化しやすい
 
+---
 
+## Monitoring & Alerting Design
 
+MSP運用を意識し、**障害を早期検知する仕組み**を構成に組み込みました。
 
+- CloudWatch Alarm → SNS → Email通知 の連携
+- EC2・RDS のメトリクス監視（CPU使用率など）
+- CloudTrail で全APIコールを記録（セキュリティ監査対応）
+- AWS Config で構成変更を継続的に追跡
+
+---
+
+## What I Struggled With (実践で詰まったこと)
+
+### Spring Boot の接続エラー
+- **問題**: 設定ファイルのスペルミスと手順ミスで接続できない状態が続いた
+- **解決**: エラーメッセージを分解し、設定値を1つずつ照合して原因を特定
+
+### WAF・SNS の連携設定
+- **問題**: AWSサービス間の連携設定（ARN参照・ポリシー設定）でエラーが頻発
+- **解決**: AWSドキュメントとTerraformドキュメントを並行して読み、設定値の意味を理解してから修正
+
+### 英語ドキュメントの読み方
+- **問題**: エラーメッセージや公式ドキュメントが英語で、どこを見るべきか判断できなかった
+- **対処**: AIを活用してエラーを翻訳・解釈しながら、ドキュメントの読み方自体を習得中
+
+---
+
+## Tech Stack
+
+- **IaC**: Terraform (HCL)
+- **Cloud**: AWS (Tokyo Region)
+- **Monitoring**: Amazon CloudWatch / AWS CloudTrail / AWS Config
+- **Security**: AWS WAF / AWS ACM / AWS Systems Manager
+- **Diagram**: draw.io
+
+---
+
+## Repository Structure
+
+```
+.
+├── terraform/          # Terraformコード一式
+├── infrastructure.png  # アーキテクチャ図
+├── infrastructure.drawio  # draw.ioソースファイル
+└── README.md
+```
+
+---
+
+## 今後の追加予定
+
+- [ ] Terraformテスト（`.tftest.hcl`）の追加
+- [ ] GitHub Actions による `terraform plan` の自動実行（CI）
+- [ ] モジュール化によるコードの再利用性向上
