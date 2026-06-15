@@ -65,8 +65,6 @@ MSP運用を意識し、**障害を早期検知する仕組み**を構成に組�
 
 - CloudWatch Alarm → SNS → Email通知 の連携
 - EC2・RDS のメトリクス監視（CPU使用率など）
-- CloudTrail で全APIコールを記録（セキュリティ監査対応）
-- AWS Config で構成変更を継続的に追跡
 
 ---
 
@@ -113,3 +111,4 @@ MSP運用を意識し、**障害を早期検知する仕組み**を構成に組�
 - [ ] Terraformテスト（`.tftest.hcl`）の追加
 - [ ] GitHub Actions による `terraform plan` の自動実行（CI）
 - [ ] モジュール化によるコードの再利用性向上
+- [ ] CloudTrail / AWS Config による監査・ガバナンス強化
