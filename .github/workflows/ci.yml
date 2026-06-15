@@ -16,10 +16,10 @@ jobs:
 
     steps:
       - name: リポジトリをチェックアウト
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Python ${{ matrix.python-version }} をセットアップ
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           cache: "pip"                     # 依存キャッシュで高速化
@@ -36,7 +36,7 @@ jobs:
           PYTHONPATH: .
 
       - name: カバレッジをアップロード (Codecov)
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v7
         with:
           files: ./coverage.xml
         continue-on-error: true            # Codecov未設定でも落ちない
