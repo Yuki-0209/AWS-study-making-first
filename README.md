@@ -61,6 +61,8 @@ Private サブネットはIGWへの直接ルートを持たず、NAT Gateway経�
 
 MSP運用を意識し、**障害を早期検知する仕組み**を構成に組み込みました。
 
+![Monitoring Diagram](./monitoring.png)
+
 - CloudWatch Alarm → SNS → Email通知 の連携
 - EC2・RDS のメトリクス監視（CPU使用率など）
 - CloudTrail で全APIコールを記録（セキュリティ監査対応）
