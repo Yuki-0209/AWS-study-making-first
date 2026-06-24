@@ -88,8 +88,8 @@ MSP運用を意識し、**障害を早期検知する仕組み**を構成に組�
 
 - **IaC**: Terraform (HCL)
 - **Cloud**: AWS (Tokyo Region)
-- **Monitoring**: Amazon CloudWatch / AWS CloudTrail / AWS Config
-- **Security**: AWS WAF / AWS ACM / AWS Systems Manager
+- **Monitoring**: Amazon CloudWatch
+- **Security**: AWS WAF / AWS Systems Manager
 - **Diagram**: draw.io
 
 ---
