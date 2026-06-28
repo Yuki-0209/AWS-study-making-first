@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: リポジトリをチェックアウト
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Python ${{ matrix.python-version }} をセットアップ
         uses: actions/setup-python@v6
