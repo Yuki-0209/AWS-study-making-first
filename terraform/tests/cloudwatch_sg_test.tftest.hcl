@@ -53,4 +53,19 @@ run "security_group_plan_check" {
     condition = anytrue([for rule in aws_security_group.rds.ingress : rule.from_port == 3306])
     error_message = "RDS SGのingressポートが3306ではありません"
   }
+
+  assert {
+    condition = alltrue([for rule in aws_security_group.elb.ingress : rule.from_port != 22])
+    error_message = "ELB SGにSSHポート(22)が開放されています"
+  }
+
+  assert {
+    condition = alltrue([for rule in aws_security_group.ec2.ingress : rule.from_port != 22])
+    error_message = "EC2 SGにSSHポート(22)が開放されています"
+  }
+
+  assert {
+    condition = alltrue([for rule in aws_security_group.rds.ingress : rule.from_port != 22])
+    error_message = "RDS SGにSSHポート(22)が開放されています"
+  }
 }
