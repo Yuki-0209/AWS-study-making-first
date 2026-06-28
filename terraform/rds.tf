@@ -62,8 +62,8 @@ resource "aws_db_instance" "main" {
   allow_major_version_upgrade = false
   auto_minor_version_upgrade  = true
   license_model               = "general-public-license"
-  deletion_protection         = false
-  skip_final_snapshot         = true
+  deletion_protection         = true
+  skip_final_snapshot         = false
 
   tags = {
     Name = "mydb"
