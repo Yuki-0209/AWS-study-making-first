@@ -26,13 +26,13 @@ run "rds_plan_check" {
   }
 
   assert {
-    condition = aws_db_instance.main.deletion_protection == false
-    error_message = "deletion_protectionがfalseではありません"
+    condition = aws_db_instance.main.deletion_protection == true
+    error_message = "deletion_protectionがtrueではありません"
   }
 
   assert {
-    condition = aws_db_instance.main.skip_final_snapshot == true
-    error_message = "skip_final_snapshotがtrueではありません"
+    condition = aws_db_instance.main.skip_final_snapshot == false
+    error_message = "skip_final_snapshotがfalseではありません"
   }
 }
 
