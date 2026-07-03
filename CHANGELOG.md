@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0](https://github.com/Yuki-0209/AWS-study-making-first/compare/v0.2.0...v0.3.0) (2026-07-03)
+
+
+### Bug Fixes
+
+* 削除保護とスナップショット機能変更 ([5e19eb9](https://github.com/Yuki-0209/AWS-study-making-first/commit/5e19eb9533c607bd78b8ba1d27f764fea56e48d3))
+* 削除保護とスナップショット機能変更 ([b4a7835](https://github.com/Yuki-0209/AWS-study-making-first/commit/b4a7835272d8352daf2536d92b26b53fb71a6003))
+
 ## [0.2.0](https://github.com/Yuki-0209/AWS-study-making-first/compare/v0.1.0...v0.2.0) (2026-06-11)
 
 
