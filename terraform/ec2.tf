@@ -67,7 +67,7 @@ resource "aws_instance" "main" {
   monitoring                           = false
 
   tags = {
-    Name = "aws-study-ec2" # このインスタンス名はaws-study-ec2で固定
+    Name = "aws-study-ec2" 
   }
 }
 
